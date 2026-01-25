@@ -32,20 +32,15 @@ def format_article(content: str, mode: str) -> tuple[str, str]:
     # Get mode-specific prompt, fallback to empathy/essay if mode not found
     mode_prompt = MODE_PROMPTS.get(mode, EMPATHY_ESSAY_PROMPT)
 
+    # Format the mode prompt with actual content (replace {content} placeholder)
+    mode_prompt = mode_prompt.format(content=content)
+
     # Combine base markdown rules with mode-specific prompt
     system_prompt = NOTE_MARKDOWN_RULES + "\n\n" + mode_prompt
 
     client = OpenAI(api_key=api_key)
 
-    user_message = f"""以下の素材をもとに記事を作成してください。
-
----
-素材:
-{content}
----
-
-上記の素材を、指定されたフォーマットに従って記事化してください。
-タイトルは1行目に見出し記号なしで出力してください。
+    user_message = """タイトルは1行目に見出し記号なしで出力してください。
 マークダウン形式で出力してください（```markdown などのコードブロックで囲まないでください）。
 """
 
