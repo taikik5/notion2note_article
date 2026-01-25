@@ -1,0 +1,16 @@
+# Notion-to-Note Article AutoDrafter Dependencies
+
+# Notion API client
+notion-client==2.7.0
+
+# OpenAI API client
+openai>=1.52.0
+
+# Browser automation
+playwright>=1.48.0
+
+# Image generation
+Pillow>=10.4.0
+
+# Environment variable management
+python-dotenv>=1.0.0

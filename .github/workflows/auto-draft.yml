@@ -1,0 +1,50 @@
+name: Article Auto-Drafter
+
+on:
+  # Daily schedule at 13:00 UTC (22:00 JST / 10:00 PM)
+  schedule:
+    - cron: '0 13 * * *'
+
+  # Manual trigger
+  workflow_dispatch:
+
+jobs:
+  auto-draft:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Install xvfb for virtual display
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Setup note.com session state
+        run: |
+          if [ ! -z "${{ secrets.NOTE_STATE_FILE }}" ]; then
+            echo "${{ secrets.NOTE_STATE_FILE }}" | base64 -d > note-state.json
+            echo "✓ Session state file restored"
+          else
+            echo "Warning: NOTE_STATE_FILE secret not found"
+          fi
+
+      - name: Run Auto-Drafter
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL || 'gpt-4o-mini' }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID_ARTICLE }}
+          NOTE_STATE_FILE: ./note-state.json
+        run: xvfb-run --auto-servernum python src/main.py

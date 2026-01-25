@@ -1,0 +1,13 @@
+{
+  "name": "notion2note-article-autodrafter",
+  "version": "1.0.0",
+  "description": "Notion to note.com article auto-drafter system",
+  "type": "module",
+  "scripts": {
+    "login": "node login-note.js"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  },
+  "devDependencies": {}
+}
