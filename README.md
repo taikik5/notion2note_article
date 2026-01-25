@@ -27,18 +27,26 @@ Notionに記事のネタを書き込むと、AIが自動で記事を生成し、
 ```
 notion2note_article/
 ├── src/                           # メインソースコード
-│   ├── main.py                    # メインオーケストレーター
-│   ├── notion_client_module.py    # Notion API連携
-│   ├── openai_formatter.py        # OpenAI文章生成
-│   ├── note_automation.py         # note.com投稿自動化
-│   ├── image_generator.py         # ヘッダー画像生成
-│   └── prompts/                   # モード別プロンプト
-│       ├── base.py                # 共通マークダウンルール
-│       ├── empathy_essay.py       # 共感・エッセイ型
-│       ├── knowhow_business.py    # ノウハウ・ビジネス型
-│       └── rewrite.py             # 推敲・リライト型
+│   ├── main.py                    # エントリーポイント・オーケストレーター
+│   ├── config.py                  # 設定・定数定義
+│   ├── core/                      # コアロジック
+│   │   ├── __init__.py
+│   │   ├── notion_client.py       # Notion API連携
+│   │   ├── openai_formatter.py    # OpenAI文章生成
+│   │   ├── note_poster.py         # note.com投稿自動化
+│   │   └── image_generator.py     # ヘッダー画像生成
+│   ├── prompts/                   # モード別プロンプト
+│   │   ├── __init__.py
+│   │   ├── base.py                # 共通マークダウンルール
+│   │   ├── empathy_essay.py       # パターンA: 共感・エッセイ型
+│   │   ├── knowhow_business.py    # パターンB: ノウハウ・ビジネス型
+│   │   └── rewrite.py             # パターンC: 推敲・リライト型
+│   └── utils/                     # ユーティリティ
+│       ├── __init__.py
+│       └── logger.py              # ロギング設定
 ├── assets/                        # 静的リソース
-│   └── header_background.png      # ヘッダー画像の背景
+│   ├── header_background.png      # ヘッダー画像の背景
+│   └── fonts/                     # 日本語フォント（オプション）
 ├── .github/workflows/
 │   └── auto-draft.yml             # GitHub Actions定義
 ├── login-note.js                  # note.comログインスクリプト
@@ -340,6 +348,135 @@ GitHub Actionsで日本語フォントがない場合、グラデーション背
 ### OpenAIモデル
 
 デフォルトでは `gpt-4o-mini` を使用します。`.env` ファイルの `OPENAI_MODEL` で変更可能です。
+
+---
+
+## プロンプトのカスタマイズガイド
+
+各モードのプロンプトは `src/prompts/` ディレクトリに格納されています。記事生成スタイルを変更したい場合は、対応するプロンプトファイルを編集してください。
+
+### 3つのモード別ファイル
+
+| ファイル | モード | 用途 | 修正対象 |
+|---------|--------|------|---------|
+| [empathy_essay.py](src/prompts/empathy_essay.py) | **共感・エッセイ型** | 体験談・意見・日記的内容 | `EMPATHY_ESSAY_PROMPT` 変数 |
+| [knowhow_business.py](src/prompts/knowhow_business.py) | **ノウハウ・ビジネス型** | 仕事術・ツール紹介 | `KNOWHOW_BUSINESS_PROMPT` 変数 |
+| [rewrite.py](src/prompts/rewrite.py) | **推敲・リライト型** | 既存文章のブラッシュアップ | `REWRITE_PROMPT` 変数 |
+
+### プロンプトの修正方法
+
+#### 1. プロンプトファイルを開く
+
+例：共感・エッセイ型を修正する場合
+```bash
+vim src/prompts/empathy_essay.py
+```
+
+#### 2. プロンプト変数を編集
+
+各ファイルには `*_PROMPT` という変数があります。以下のように修正します：
+
+```python
+EMPATHY_ESSAY_PROMPT = """
+あなたは親しみやすい執筆者です。
+...（修正したいプロンプト内容）...
+"""
+```
+
+#### 3. 修正ポイント例
+
+**トーン・スタイルを変更したい場合：**
+```python
+# 修正前
+あなたは親しみやすい先輩のような執筆者です。
+
+# 修正後
+あなたはプロフェッショナルなライターです。
+```
+
+**構成や見出しを変更したい場合：**
+```python
+# 修正前
+## はじめに
+## メイン内容
+## あとがき
+
+# 修正後
+## 背景
+## 本論
+## 結論
+## 参考資料
+```
+
+**記事の長さを調整したい場合：**
+プロンプトの説明文に以下を追加：
+```python
+EMPATHY_ESSAY_PROMPT = """
+...
+記事の目安：2000文字程度
+...
+"""
+```
+
+#### 4. 変更内容を確認
+
+修正後、ローカルでテスト実行：
+```bash
+# 仮想環境を有効化
+source venv/bin/activate
+
+# テスト実行
+python src/main.py
+```
+
+Notionのデータベースに`Status=Ready`のテスト記事を1つ追加して実行し、生成される記事スタイルが期待通りか確認してください。
+
+### プロンプトの共通ルール
+
+すべてのモードで共通のマークダウン規則は [base.py](src/prompts/base.py) に定義されています：
+
+```python
+NOTE_MARKDOWN_RULES = """
+...（note.com用のマークダウンルール）...
+"""
+```
+
+note.com特有のフォーマット要件を修正する場合はこちらを編集してください。
+
+### よくある修正例
+
+#### 例1: 結論ファーストを強制したい
+```python
+KNOWHOW_BUSINESS_PROMPT = """
+...
+記事の構成：
+1. **結論：30文字以内で最重要メッセージ**
+2. 背景と理由
+3. 具体的な実装方法
+4. まとめ
+...
+"""
+```
+
+#### 例2: 絵文字を活用したい
+```python
+EMPATHY_ESSAY_PROMPT = """
+...
+文中に適度に絵文字（😊 📚 💡など）を使用して、親しみやすさを演出してください。
+...
+"""
+```
+
+#### 例3: 特定のキーワードを含める
+```python
+REWRITE_PROMPT = """
+...
+以下のキーワードを可能な限り含めてください：
+- {{keyword1}}
+- {{keyword2}}
+...
+"""
+```
 
 ---
 

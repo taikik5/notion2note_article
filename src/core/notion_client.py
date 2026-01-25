@@ -1,16 +1,14 @@
 """
-Notion API module for fetching and updating articles.
+Notion API client for fetching and updating articles.
 """
 
 import os
-
+import sys
 import httpx
 
-
-NOTION_API_BASE = "https://api.notion.com/v1"
-
-# モードのデフォルト値
-DEFAULT_MODE = "共感・エッセイ型"
+# Add parent directory to path for config import
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import NOTION_API_BASE, DEFAULT_MODE
 
 
 def get_notion_headers() -> dict:

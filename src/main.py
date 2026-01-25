@@ -19,13 +19,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from dotenv import load_dotenv
 
-from notion_client_module import (
-    fetch_ready_articles,
-    mark_as_done,
-)
-from openai_formatter import format_article
-from note_automation import post_draft_to_note
-from image_generator import create_header_image
+# Import from core modules
+from core.notion_client import fetch_ready_articles, mark_as_done
+from core.openai_formatter import format_article
+from core.note_poster import post_draft_to_note
+from core.image_generator import create_header_image
 
 # Load environment variables from .env file
 load_dotenv()

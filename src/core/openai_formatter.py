@@ -1,10 +1,13 @@
 """
-OpenAI API module for formatting articles with mode-specific prompts.
+OpenAI API client for formatting articles with mode-specific prompts.
 """
 
 import os
+import sys
 from openai import OpenAI
 
+# Add parent directory to path for prompts import
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from prompts import NOTE_MARKDOWN_RULES, MODE_PROMPTS, EMPATHY_ESSAY_PROMPT
 
 

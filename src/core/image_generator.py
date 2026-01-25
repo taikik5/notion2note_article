@@ -4,16 +4,16 @@ Generates header images with article title overlay.
 """
 
 import os
+import sys
 from PIL import Image, ImageDraw, ImageFont
 
-
-# note.com recommended image size
-IMAGE_WIDTH = 1280
-IMAGE_HEIGHT = 670
+# Add parent directory to path for config import
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import IMAGE_WIDTH, IMAGE_HEIGHT
 
 # Assets directory
 ASSETS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
     "assets"
 )
 
