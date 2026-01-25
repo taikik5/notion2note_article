@@ -46,6 +46,7 @@ notion2note_article/
 │       └── logger.py              # ロギング設定
 ├── assets/                        # 静的リソース
 │   ├── header_background.png      # ヘッダー画像の背景
+│   ├── Pacifico.ttf               # ヘッダー画像用フォント（Google Fonts）
 │   └── fonts/                     # 日本語フォント（オプション）
 ├── .github/workflows/
 │   └── auto-draft.yml             # GitHub Actions定義
@@ -158,7 +159,50 @@ npm install
 npx playwright install chromium
 ```
 
-### 5. 環境変数の設定
+### 5. フォント設定
+
+ヘッダー画像生成には **Pacifico フォント** を使用しています（既に `assets/Pacifico.ttf` に含まれています）。
+
+#### フォント優先度（自動フォールバック）
+
+以下の順で利用可能なフォントが自動選択されます：
+
+1. **Pacifico.ttf** (Google Fonts) - 洗練された書体（英数字のみ対応）
+2. **NotoSansJP-Bold.ttf** - 日本語対応（オプション）
+3. **システムフォント** - macOS/Linux/Windows標準フォント
+4. **デフォルトフォント** - 利用不可時のフォールバック
+
+> **重要：フォント選択について**
+>
+> - **Pacifico.ttf**: 英数字のみをサポートする美しい筆記体フォント。数字やアルファベットのみのタイトルに最適です
+> - **日本語タイトルの場合**: 自動的にシステムフォント（macOS: ヒラギノ角ゴシック、Linux: Noto Sans CJK等）にフォールバックします
+> - フォントの自動選択のため、別途設定は不要です
+
+> **注記：** Pacificoフォントは既にプロジェクトに含まれているため、追加インストール不要です。
+
+#### カスタムフォントの追加（オプション）
+
+日本語フォントをより詳細に制御したい場合は、以下のようにフォントファイルを配置できます：
+
+```bash
+assets/
+├── Pacifico.ttf                    # メインフォント
+├── NotoSansJP-Bold.ttf             # 日本語フォント（オプション）
+└── your-custom-font.ttf            # カスタムフォント（オプション）
+```
+
+カスタムフォント追加後、`src/core/image_generator.py` の `_get_japanese_font()` 関数のフォント検索パスを編集してください：
+
+```python
+def _get_japanese_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    font_paths = [
+        os.path.join(ASSETS_DIR, "Pacifico.ttf"),
+        os.path.join(ASSETS_DIR, "your-custom-font.ttf"),  # ← ここに追加
+        # ... 既存のパス ...
+    ]
+```
+
+### 7. 環境変数の設定
 
 ```bash
 # テンプレートをコピー
@@ -173,8 +217,8 @@ cp .env.example .env
 # OpenAI API Key
 OPENAI_API_KEY=sk-xxxxx
 
-# OpenAI Model（省略可、デフォルト: gpt-4o-mini）
-OPENAI_MODEL=gpt-4o-mini
+# OpenAI Model（省略可、デフォルト: gpt-4o）
+OPENAI_MODEL=gpt-4o
 
 # Notion Integration Token
 NOTION_TOKEN=secret_xxxxx
@@ -183,7 +227,7 @@ NOTION_TOKEN=secret_xxxxx
 NOTION_DATABASE_ID=xxxxx
 ```
 
-### 6. note.comへのログイン（セッション保存）
+### 8. note.comへのログイン（セッション保存）
 
 ```bash
 npm run login
@@ -309,10 +353,26 @@ Session expired or invalid. Redirected to login page.
 2. セッションが有効か確認（`npm run login` で再取得）
 3. スクリーンショット（`error_screenshot.png`）を確認
 
-### 日本語フォントが表示されない
+### フォント表示に関する問題
 
-GitHub Actionsで日本語フォントがない場合、グラデーション背景にフォールバックされます。
-日本語フォント（NotoSansJP-Bold.ttf など）を `assets/` フォルダに配置すると改善します。
+#### Pacificoフォントが使用されていない場合
+
+ヘッダー画像のタイトルが期待するフォントで表示されていない場合、以下を確認してください：
+
+1. `assets/Pacifico.ttf` が存在するか確認
+2. 実行時のログで「✓ Loaded font: ...」と表示されているかを確認
+3. ログで「✗ Failed to load ...」が表示されていないかを確認
+
+#### GitHub Actionsでのフォント不足
+
+GitHub Actions環境で日本語フォントが不足する場合、グラデーション背景にフォールバックされます。以下の対応が可能です：
+
+**オプション1: Pacificoフォントを使用（推奨）**
+- `assets/Pacifico.ttf` が含まれているため、自動的に使用されます
+
+**オプション2: 追加の日本語フォントを配置**
+- `assets/NotoSansJP-Bold.ttf` などのフォントファイルを配置することで、より多くの文字に対応できます
+- Google FontsやNoto Fonts から入手できます
 
 ---
 
