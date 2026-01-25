@@ -179,7 +179,9 @@ def _wrap_text(text: str, font: ImageFont.FreeTypeFont, max_width: int, draw: Im
 def _get_japanese_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     """Get a Japanese-compatible font, with fallbacks for different environments."""
     font_paths = [
-        # Primary: Pacifico (playful cursive for note.com aesthetic)
+        # Primary: Dela Gothic One (bold, distinctive Google Font)
+        os.path.join(ASSETS_DIR, "DelaGothicOne.ttf"),
+        # Secondary: Pacifico (playful cursive for note.com aesthetic)
         os.path.join(ASSETS_DIR, "Pacifico.ttf"),
         # User-provided Japanese fonts (in assets folder)
         os.path.join(ASSETS_DIR, "NotoSansJP-Bold.ttf"),

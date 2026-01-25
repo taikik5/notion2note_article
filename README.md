@@ -46,7 +46,8 @@ notion2note_article/
 │       └── logger.py              # ロギング設定
 ├── assets/                        # 静的リソース
 │   ├── header_background.png      # ヘッダー画像の背景
-│   ├── Pacifico.ttf               # ヘッダー画像用フォント（Google Fonts）
+│   ├── DelaGothicOne.ttf          # ヘッダー画像用フォント（Google Fonts - 推奨）
+│   ├── Pacifico.ttf               # フォールバックフォント（Google Fonts）
 │   └── fonts/                     # 日本語フォント（オプション）
 ├── .github/workflows/
 │   └── auto-draft.yml             # GitHub Actions定義
@@ -161,43 +162,47 @@ npx playwright install chromium
 
 ### 5. フォント設定
 
-ヘッダー画像生成には **Pacifico フォント** を使用しています（既に `assets/Pacifico.ttf` に含まれています）。
+ヘッダー画像生成には **Dela Gothic One フォント** を使用しています（既に `assets/DelaGothicOne.ttf` に含まれています）。
 
 #### フォント優先度（自動フォールバック）
 
 以下の順で利用可能なフォントが自動選択されます：
 
-1. **Pacifico.ttf** (Google Fonts) - 洗練された書体（英数字のみ対応）
-2. **NotoSansJP-Bold.ttf** - 日本語対応（オプション）
-3. **システムフォント** - macOS/Linux/Windows標準フォント
-4. **デフォルトフォント** - 利用不可時のフォールバック
+1. **DelaGothicOne.ttf** (Google Fonts - 推奨) - 太字で独特な装飾的書体
+2. **Pacifico.ttf** (Google Fonts) - 洗練された筆記体（英数字のみ対応）
+3. **NotoSansJP-Bold.ttf** - 日本語対応（オプション）
+4. **システムフォント** - macOS/Linux/Windows標準フォント
+5. **デフォルトフォント** - 利用不可時のフォールバック
 
 > **重要：フォント選択について**
 >
-> - **Pacifico.ttf**: 英数字のみをサポートする美しい筆記体フォント。数字やアルファベットのみのタイトルに最適です
+> - **DelaGothicOne.ttf**: 太字で装飾的な Google Fonts。英数字のみをサポートし、大胆なタイトルに最適です（推奨）
+> - **Pacifico.ttf**: エレガントな筆記体フォント。英数字のみのタイトルに使用されます
 > - **日本語タイトルの場合**: 自動的にシステムフォント（macOS: ヒラギノ角ゴシック、Linux: Noto Sans CJK等）にフォールバックします
 > - フォントの自動選択のため、別途設定は不要です
 
-> **注記：** Pacificoフォントは既にプロジェクトに含まれているため、追加インストール不要です。
+> **注記：** DelaGothicOne と Pacifico フォントは既にプロジェクトに含まれているため、追加インストール不要です。
 
 #### カスタムフォントの追加（オプション）
 
-日本語フォントをより詳細に制御したい場合は、以下のようにフォントファイルを配置できます：
+異なるフォントを使用したい場合は、フォントファイルを `assets/` フォルダに配置できます：
 
 ```bash
 assets/
-├── Pacifico.ttf                    # メインフォント
-├── NotoSansJP-Bold.ttf             # 日本語フォント（オプション）
-└── your-custom-font.ttf            # カスタムフォント（オプション）
+├── DelaGothicOne.ttf               # 現在のメインフォント
+├── Pacifico.ttf                    # フォールバックフォント
+├── your-custom-font.ttf            # カスタムフォント（オプション）
+└── NotoSansJP-Bold.ttf             # 日本語フォント（オプション）
 ```
 
-カスタムフォント追加後、`src/core/image_generator.py` の `_get_japanese_font()` 関数のフォント検索パスを編集してください：
+フォント優先度を変更したい場合は、`src/core/image_generator.py` の `_get_japanese_font()` 関数を編集してください：
 
 ```python
 def _get_japanese_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     font_paths = [
+        os.path.join(ASSETS_DIR, "your-custom-font.ttf"),  # ← 優先度を上げたいフォントをここに
+        os.path.join(ASSETS_DIR, "DelaGothicOne.ttf"),
         os.path.join(ASSETS_DIR, "Pacifico.ttf"),
-        os.path.join(ASSETS_DIR, "your-custom-font.ttf"),  # ← ここに追加
         # ... 既存のパス ...
     ]
 ```
@@ -355,20 +360,20 @@ Session expired or invalid. Redirected to login page.
 
 ### フォント表示に関する問題
 
-#### Pacificoフォントが使用されていない場合
+#### フォントが正しく使用されていない場合
 
 ヘッダー画像のタイトルが期待するフォントで表示されていない場合、以下を確認してください：
 
-1. `assets/Pacifico.ttf` が存在するか確認
+1. `assets/DelaGothicOne.ttf` および `assets/Pacifico.ttf` が存在するか確認
 2. 実行時のログで「✓ Loaded font: ...」と表示されているかを確認
 3. ログで「✗ Failed to load ...」が表示されていないかを確認
 
 #### GitHub Actionsでのフォント不足
 
-GitHub Actions環境で日本語フォントが不足する場合、グラデーション背景にフォールバックされます。以下の対応が可能です：
+GitHub Actions環境で指定フォントが不足する場合、フォールバックチェーンに従い自動的に他のフォントが使用されます。以下の対応が可能です：
 
-**オプション1: Pacificoフォントを使用（推奨）**
-- `assets/Pacifico.ttf` が含まれているため、自動的に使用されます
+**オプション1: 含まれるフォントを使用（推奨）**
+- `assets/DelaGothicOne.ttf` と `assets/Pacifico.ttf` が含まれているため、自動的に使用されます
 
 **オプション2: 追加の日本語フォントを配置**
 - `assets/NotoSansJP-Bold.ttf` などのフォントファイルを配置することで、より多くの文字に対応できます
