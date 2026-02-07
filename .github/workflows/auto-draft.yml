@@ -31,20 +31,61 @@ jobs:
       - name: Install xvfb for virtual display
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
+      - name: Verify required secrets are configured
+        run: |
+          echo "Checking required secrets configuration..."
+          MISSING_SECRETS=()
+
+          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+            MISSING_SECRETS+=("OPENAI_API_KEY")
+          fi
+
+          if [ -z "${{ secrets.NOTION_TOKEN }}" ]; then
+            MISSING_SECRETS+=("NOTION_TOKEN")
+          fi
+
+          if [ -z "${{ secrets.NOTION_DATABASE_ID_ARTICLE }}" ]; then
+            MISSING_SECRETS+=("NOTION_DATABASE_ID_ARTICLE")
+          fi
+
+          if [ ${#MISSING_SECRETS[@]} -gt 0 ]; then
+            echo "❌ ERROR: Missing required secrets:"
+            for secret in "${MISSING_SECRETS[@]}"; do
+              echo "  - $secret"
+            done
+            exit 1
+          else
+            echo "✓ All required secrets are configured"
+          fi
+
       - name: Setup note.com session state
         run: |
           if [ ! -z "${{ secrets.NOTE_STATE_FILE }}" ]; then
             echo "${{ secrets.NOTE_STATE_FILE }}" | base64 -d > note-state.json
             echo "✓ Session state file restored"
           else
-            echo "Warning: NOTE_STATE_FILE secret not found"
+            echo "⚠ NOTE_STATE_FILE secret not found (optional)"
           fi
 
       - name: Run Auto-Drafter
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL || 'gpt-4o-mini' }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL || '' }}
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID_ARTICLE }}
           NOTE_STATE_FILE: ./note-state.json
-        run: xvfb-run --auto-servernum python src/main.py
+        run: |
+          # Use OPENAI_MODEL from secret, or default to gpt-4o-mini
+          export OPENAI_MODEL="${OPENAI_MODEL:-gpt-4o-mini}"
+          echo "Using OPENAI_MODEL: $OPENAI_MODEL"
+          xvfb-run --auto-servernum python src/main.py
+
+      - name: Workflow Status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✓ Auto-Drafter completed successfully"
+          else
+            echo "❌ Auto-Drafter encountered an error"
+            echo "Check the logs above for details"
+          fi
